@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\User;
+use App\Model\user\User;
 use Auth;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Mail;
 use App\Mail\PasswordReset;
+use DB;
 
 class UserController extends Controller
 {
@@ -104,6 +105,22 @@ public function update(Request $request){
         'message' => 'Information has been updated successfully!',
         'user' =>$user
     ]);
+}
+
+public function publish(Request $request){        
+        // login now..
+        //return $this->login($request);
+        DB::table('comments')->insert(
+            [
+            'message' => $request->message, 
+            ]
+        );   
+}
+
+public function publication_show()
+{
+    $pubs = DB::table('comments')->get();
+    return $pubs;
 }
 
 

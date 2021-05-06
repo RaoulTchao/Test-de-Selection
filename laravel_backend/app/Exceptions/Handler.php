@@ -2,8 +2,10 @@
 
 namespace App\Exceptions;
 
-use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Throwable;
+use Exception;
+use Illuminate\Auth\AuthenticationException;
 
 class Handler extends ExceptionHandler
 {
@@ -29,10 +31,12 @@ class Handler extends ExceptionHandler
     /**
      * Report or log an exception.
      *
-     * @param  \Exception  $exception
+     * @param  \Throwable  $exception
      * @return void
+     *
+     * @throws \Throwable
      */
-    public function report(Exception $exception)
+    public function report(Throwable $exception)
     {
         parent::report($exception);
     }
@@ -41,36 +45,47 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $exception
+     * @param  \Throwable  $exception
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Throwable
+     */
+    public function render($request, Throwable $exception)
+    {
+        return parent::render($request, $exception);
+    }
+
+    /**
+     * Convert an authentication exception into an unauthenticated response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Auth\AuthenticationException  $exception
      * @return \Illuminate\Http\Response
      */
-    public function render($request, Exception $exception)
+    protected function unauthenticated($request, AuthenticationException $exception)
     {
-        if ($exception instanceof \Tymon\JWTAuth\Exceptions\TokenBlacklistedException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token is expired'
-            ], 233);
-        }
-        if ($exception instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid token'
-            ], 233);
-        }
-        if ($exception instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token exipired'
-            ], 233);
+        if ($request->expectsJson()) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
         }
 
-        if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid method called, it does not exists'
-            ], 233);
-        }
-        return parent::render($request, $exception);
+        return redirect()->guest(route('admin.login'));
+
+        /* $guard = array_get($exception->guards(),0);
+
+        switch ($guard) {
+
+            case 'admin':
+            
+                     return redirect()->guest(route('admin.login'));
+
+                break;
+            
+            default:
+
+                     return redirect()->guest(route('login'));
+
+                break;
+        } */
+
     }
 }
