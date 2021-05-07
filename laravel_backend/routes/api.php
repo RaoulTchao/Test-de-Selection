@@ -29,5 +29,6 @@ Route::get('/logout', 'UserController@logout');
 
 Route::post('/publish','UserController@publish');
 Route::get('/publication_show','UserController@publication_show');
+Route::delete('delete_pub/{id}','UserController@delete');
 
 

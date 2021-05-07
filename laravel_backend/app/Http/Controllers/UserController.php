@@ -83,45 +83,55 @@ class UserController extends Controller
         $user->isProfileUpdated=$isProfileUpdated;
 
         return $user;
-}
+    }
 
-   
-public function update(Request $request){
-    $user=$this->getCurrentUser($request);
-    if(!$user){
+       
+    public function update(Request $request){
+        $user=$this->getCurrentUser($request);
+        if(!$user){
+            return response()->json([
+                'success' => false,
+                'message' => 'User is not found'
+            ]);
+        }
+       
+        unset($data['token']);
+
+        $updatedUser = User::where('id', $user->id)->update($data);
+        $user =  User::find($user->id);
+
         return response()->json([
-            'success' => false,
-            'message' => 'User is not found'
+            'success' => true, 
+            'message' => 'Information has been updated successfully!',
+            'user' =>$user
         ]);
     }
-   
-    unset($data['token']);
 
-    $updatedUser = User::where('id', $user->id)->update($data);
-    $user =  User::find($user->id);
+    public function publish(Request $request){        
+            // login now..
+            //return $this->login($request);
+            DB::table('comments')->insert(
+                [
+                'message' => $request->message, 
+                ]
+            );   
+    }
 
-    return response()->json([
-        'success' => true, 
-        'message' => 'Information has been updated successfully!',
-        'user' =>$user
-    ]);
-}
+    public function publication_show()
+    {
+        $pubs = DB::table('comments')->get();
+        return $pubs;
+    }
 
-public function publish(Request $request){        
-        // login now..
-        //return $this->login($request);
-        DB::table('comments')->insert(
-            [
-            'message' => $request->message, 
-            ]
-        );   
-}
+    public function delete($id)
+    {        
+        DB::table('comments')->where('id',$id)->delete();
 
-public function publication_show()
-{
-    $pubs = DB::table('comments')->get();
-    return $pubs;
-}
+        return response()->json([
+            "message" => "message supprime"
+        ], 202);
+    }
+
 
 
 
